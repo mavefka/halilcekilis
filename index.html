@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InstaÇekiliş — Doğrulanmış Instagram Çekiliş Aracı</title>
+  <style>
+    :root {
+      --bg: #0b0d14;
+      --surface: #141824;
+      --surface-2: #1c2233;
+      --border: rgba(255, 255, 255, 0.09);
+      --text: #f3f5fa;
+      --muted: #98a2b8;
+      --ig-grad: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+      --accent: #e1306c;
+      --success: #22c55e;
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      background:
+        radial-gradient(900px 500px at 15% -10%, rgba(225, 48, 108, 0.16), transparent 60%),
+        radial-gradient(800px 500px at 90% 0%, rgba(131, 58, 180, 0.16), transparent 60%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 28px 20px 48px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 26px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: var(--ig-grad);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 22px;
+      color: #fff;
+      box-shadow: 0 10px 28px rgba(225, 48, 108, 0.35);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      letter-spacing: -0.02em;
+    }
+
+    .brand p {
+      margin: 2px 0 0;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge-verified {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.28);
+      color: #86efac;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 880px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+    }
+
+    .card-title {
+      margin: 0 0 14px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+
+    input[type="text"],
+    input[type="url"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      color: var(--text);
+      padding: 11px 13px;
+      font: inherit;
+      font-size: 0.93rem;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #e1306c;
+      box-shadow: 0 0 0 3px rgba(225, 48, 108, 0.2);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 110px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.84rem;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .input-row input { flex: 1; }
+
+    button {
+      font: inherit;
+      cursor: pointer;
+      border: none;
+      border-radius: 11px;
+      padding: 10px 16px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: transform 0.12s, opacity 0.15s, background 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    button:active { transform: scale(0.98); }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .btn-primary {
+      background: var(--ig-grad);
+      color: #fff;
+      box-shadow: 0 8px 22px rgba(225, 48, 108, 0.3);
+    }
+
+    .btn-secondary {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #252c42;
+    }
+
+    .btn-draw {
+      width: 100%;
+      padding: 15px 20px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      border-radius: 13px;
+      background: var(--ig-grad);
+      color: #fff;
+      box-shadow: 0 12px 30px rgba(225, 48, 108, 0.38);
+    }
+
+    .status-msg {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      display: none;
+    }
+
+    .status-msg.show { display: block; }
+    .status-msg.ok {
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #86efac;
+    }
+    .status-msg.err {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.32);
+      color: #fde68a;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 18px 0;
+    }
+
+    .helper-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .participants-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .count-pill {
+      background: rgba(225, 48, 108, 0.16);
+      color: #fda4af;
+      border: 1px solid rgba(225, 48, 108, 0.3);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .participants-box {
+      max-height: 250px;
+      overflow-y: auto;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chip {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      color: #e2e8f0;
+    }
+
+    .empty-state {
+      color: var(--muted);
+      font-size: 0.86rem;
+      padding: 18px;
+      text-align: center;
+      width: 100%;
+    }
+
+    .stage-title {
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin: 0 0 6px;
+      background: var(--ig-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stage-subtitle {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin: 0 0 18px;
+    }
+
+    .reel-window {
+      position: relative;
+      height: 220px;
+      overflow: hidden;
+      border-radius: 14px;
+      background: #0d1019;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 18px;
+    }
+
+    .reel-window::before,
+    .reel-window::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 64px;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .reel-window::before {
+      top: 0;
+      background: linear-gradient(to bottom, #0d1019 10%, transparent);
+    }
+
+    .reel-window::after {
+      bottom: 0;
+      background: linear-gradient(to top, #0d1019 10%, transparent);
+    }
+
+    .reel-selector {
+      position: absolute;
+      top: 50%;
+      left: 12px;
+      right: 12px;
+      height: 54px;
+      transform: translateY(-50%);
+      border-radius: 12px;
+      border: 2px solid #e1306c;
+      background: rgba(225, 48, 108, 0.08);
+      box-shadow: 0 0 24px rgba(225, 48, 108, 0.25);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .reel-track {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      will-change: transform;
+    }
+
+    .reel-item {
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #cbd5e1;
+      letter-spacing: 0.01em;
+    }
+
+    .reel-item.winner-item {
+      color: #fff;
+      text-shadow: 0 0 16px rgba(225, 48, 108, 0.7);
+    }
+
+    .countdown-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(11, 13, 20, 0.86);
+      display: none;
+      place-items: center;
+      z-index: 5;
+      font-size: 4rem;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .countdown-overlay.show { display: grid; }
+
+    .winner-card {
+      display: none;
+      margin-top: 16px;
+      padding: 18px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.14), rgba(225, 48, 108, 0.14));
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      text-align: center;
+      animation: popIn 0.35s ease-out;
+    }
+
+    .winner-card.show { display: block; }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.94); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .winner-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #86efac;
+      font-weight: 700;
+    }
+
+    .winner-name {
+      font-size: 1.75rem;
+      font-weight: 900;
+      margin: 6px 0;
+      color: #fff;
+    }
+
+    .winner-meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    details {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    details summary {
+      cursor: pointer;
+      color: #cbd5e1;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    footer {
+      margin-top: 32px;
+      text-align: center;
+      color: #64748b;
+      font-size: 0.78rem;
+      user-select: none;
+    }
+
+    dialog {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 22px;
+      max-width: 500px;
+      width: calc(100% - 32px);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    }
+
+    dialog:modal {
+      overscroll-behavior: contain;
+    }
+
+    dialog::backdrop {
+      background: rgba(5, 7, 12, 0.72);
+      backdrop-filter: blur(4px);
+      overflow: hidden;
+      overscroll-behavior: contain;
+    }
+
+    dialog h1 {
+      margin: 0 0 10px;
+      font-size: 1.15rem;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .field { margin-bottom: 12px; }
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.88rem;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+    .checkbox-row input { width: 16px; height: 16px; accent-color: #e1306c; }
+  </style>
+</head>
+<body>
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="brand-logo">IÇ</div>
+        <div>
+          <h1>InstaÇekiliş</h1>
+          <p>Instagram Yorum &amp; Katılımcı Çekiliş Sistemi</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button type="button" id="sound-toggle" class="btn-secondary" title="Ses Aç/Kapat">🔊 Ses Açık</button>
+        <span class="badge-verified">✓ Şeffaf Çekiliş Motoru</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <h2 class="card-title">1. Gönderi &amp; Katılımcılar</h2>
+
+        <div class="field">
+          <label for="post-url">Instagram Gönderi / Reels Linki</label>
+          <div class="input-row">
+            <input type="url" id="post-url" value="https://www.instagram.com/reels/Df7Vf5IReIn/" placeholder="https://www.instagram.com/p/..." />
+            <button type="button" id="fetch-btn" class="btn-primary">Yorumları Getir</button>
+          </div>
+        </div>
+
+        <div id="fetch-status" class="status-msg show ok">
+          ✓ 115 benzersiz katılımcı doğrulandı ve havuza eklendi (çoklu yorumlar tekilleştirildi).
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="participants-header">
+          <div>
+            <span style="font-weight: 700; font-size: 0.92rem;">Katılımcı Havuzu</span>
+            <div style="font-size: 0.76rem; color: #86efac;">✓ Her kullanıcı 1 kez sayılır (çoklu yorumlar tekilleştirilir)</div>
+          </div>
+          <span id="participant-count" class="count-pill">115 Kişi</span>
+        </div>
+
+        <div id="participants-box" class="participants-box"></div>
+
+        <details>
+          <summary>Katılımcı Listesini Düzenle / Ekle</summary>
+          <div style="margin-top: 10px;">
+            <textarea id="manual-input" placeholder="@kullanici1&#10;@kullanici2"></textarea>
+            <div class="helper-row">
+              <button type="button" id="apply-list-btn" class="btn-secondary">Listeyi Uygula</button>
+              <button type="button" id="reset-list-btn" class="btn-secondary">Varsayılana Dön</button>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <section class="card">
+        <h2 class="stage-title" id="draw-title">GTA 6 + PlayStation 5 Büyük Çekilişi</h2>
+        <p class="stage-subtitle">Katılımcılar arasından rastgele 1 asıl kazanan seçilir</p>
+
+        <div class="reel-window">
+          <div class="reel-selector"></div>
+          <div id="reel-track" class="reel-track">
+            <div class="reel-item">Çekiliş Bekleniyor...</div>
+          </div>
+          <div id="countdown-overlay" class="countdown-overlay">3</div>
+        </div>
+
+        <button type="button" id="draw-btn" class="btn-draw">🎲 Çekilişi Başlat</button>
+
+        <div id="winner-card" class="winner-card">
+          <div class="winner-label">🎉 Tebrikler! Resmi Kazanan</div>
+          <div id="winner-name" class="winner-name">@kazanan</div>
+          <div id="winner-meta" class="winner-meta"></div>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      <span id="secret-trigger" title="Sistem Sürümü">InstaÇekiliş v2.4.1 • SSL Doğrulamalı Çekiliş Altyapısı</span>
+    </footer>
+  </div>
+
+  <!-- Gizli Ayarlar Modalı (Ctrl + Shift + H) -->
+  <dialog id="secret-modal" closedby="any" aria-labelledby="secret-title">
+    <h1 id="secret-title">🎂 Doğum Günü Sürpriz Ayarları</h1>
+    <p style="color: var(--muted); font-size: 0.84rem; margin-top: 0;">
+      Bu pencere sadece <b>Ctrl + Shift + H</b> ile açılır. Ekranda normal çekiliş gibi görünür.
+    </p>
+    <div class="field">
+      <label for="cfg-target">Kesin Çıkacak Kullanıcı Adı</label>
+      <input type="text" id="cfg-target" placeholder="halilibrahimbergin" autofocus />
+    </div>
+    <div class="field">
+      <label for="cfg-title">Çekiliş Başlığı</label>
+      <input type="text" id="cfg-title" placeholder="GTA 6 + PlayStation 5 Büyük Çekilişi" />
+    </div>
+    <div class="field">
+      <label for="cfg-duration">Çark Dönme Süresi (Saniye)</label>
+      <input type="number" id="cfg-duration" min="2" max="15" value="6" />
+    </div>
+    <label class="checkbox-row">
+      <input type="checkbox" id="cfg-active" checked />
+      <span>Sürpriz Modu Aktif (Ne kadar çekilirse çekilsin hedefe çıkar)</span>
+    </label>
+    <div id="cfg-status" class="status-msg"></div>
+    <div class="dialog-actions">
+      <button type="button" id="save-cfg-btn" class="btn-primary">Ayarları Kaydet</button>
+      <form method="dialog">
+        <button value="close" class="btn-secondary">Kapat</button>
+      </form>
+    </div>
+  </dialog>
+
+  <script>
+    if (!('closedBy' in HTMLDialogElement.prototype)) {
+      const outside = (e, dialog) => {
+        const r = dialog.getBoundingClientRect();
+        return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+      };
+      for (const dialog of document.querySelectorAll('dialog[closedby="any"]')) {
+        let pressedOutside = false;
+        dialog.addEventListener('pointerdown', (e) => { pressedOutside = outside(e, dialog); });
+        dialog.addEventListener('pointerup', (e) => { if (pressedOutside && outside(e, dialog)) dialog.close(); });
+      }
+    }
+
+    const DEFAULT_PARTICIPANTS = [
+      "ahmetxdz", "deniz.tbkk", "n.egalodon", "ilaydai.orv", "toprakx.7",
+      "enisebusee8", "fundaazq", "vettelle_biomur", "talhabrk55", "mehmetvkusan26",
+      "e.kdn", "rabiahazar", "vaqif.rajabov", "onur.logun", "meriiorg",
+      "rabialbyc", "furkaaankarasu", "pnartasp", "ekrml_", "alihanakd1",
+      "erayyaman5454", "nimrodel2024", "inalemrahh", "aykut_ciftci06", "tatarikob_",
+      "bukethakandemirel", "mumis5561", "dinosaur.1672574", "gecko.17320589", "elimielena",
+      "hamza.eymen_", "talha_ysl7", "ciftcibaba26", "mcolpan26", "beyz.a4kar",
+      "haktancr7", "vahdetmeral", "zzwqa2", "kaankck.1", "mertkrkz16",
+      "h.arelbozzz", "burcuu.burakk", "sinemaveoyun2026", "caneroglu02012015", "ygzormn_tr26",
+      "burak.marss", "fatosburak0203", "kapalikalefk", "sitki5204", "hakomcity",
+      "kanlioglu.melih", "muhamed_.58", "mr.macit.07", "nihaterenkeskin", "abdullaherdaas",
+      "halilibrahimbergin", "yasamaksorunoldu20", "gizenginler", "yusufurkann_", "miracinbabanesii",
+      "boralo_549", "haticeeozturk01", "talatcnpolat", "barantunc2162", "zenci_panda21",
+      "enes2332_56", "alara_02120", "atilla.xqq", "geceonikii", "fahriibulbul",
+      "serhatkaya2702", "emrw4h", "beyoo_wq9", "cileklisut_seviyorum", "leventaktas_",
+      "tugalp_evil", "mirac.kusan", "dogandirek", "emreaktas34", "elceronimo",
+      "saadetagcicek", "eliffleblebici", "sebnem.s.a", "aynuragcicek", "nurseldirek",
+      "1991orcozkn33", "semsiye_k8", "kaplantemurefe", "rabbit.9375280", "emreka9309",
+      "akgulagcicek_", "sheep.4320848", "hasan21el_matador", "mguler61", "brkyxx7",
+      "mustafaayd.36", "hasanayd.36", "erenndoruk_", "ersagungerek1903", "emir_poyraz_korkmaz",
+      "by_eymn", "yusufmetin911", "b.atuhan.27", "orhan_umut_demiralp2013", "furkancimen09",
+      "i.ismai.dy", "blok3_fanx", "emin40212", "emreedorumm_", "serpildenorguler60",
+      "patiayak60", "umutpoyraz58", "omurzunal", "kutsal_ahmt", "hldgnldmrl93"
+    ];
+
+    const DEFAULT_CONFIG = {
+      hedef_kullanici: 'halilibrahimbergin',
+      cekilis_basligi: 'GTA 6 + PlayStation 5 Büyük Çekilişi',
+      animasyon_suresi_sn: 6,
+      aktif: true
+    };
+
+    let config = loadConfig();
+    let participants = [];
+    let isDrawing = false;
+    let soundEnabled = true;
+    let audioCtx = null;
+
+    const el = (id) => document.getElementById(id);
+
+    function normalizeName(str) {
+      return String(str || '').trim().replace(/^@+/, '').toLowerCase();
+    }
+
+    function loadConfig() {
+      try {
+        const saved = localStorage.getItem('instacekilis_cfg');
+        if (saved) return { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
+      } catch {}
+      return { ...DEFAULT_CONFIG };
+    }
+
+    function showStatus(targetEl, msg, isError = false) {
+      targetEl.textContent = msg;
+      targetEl.className = 'status-msg show ' + (isError ? 'err' : 'ok');
+    }
+
+    function playTick(freq = 620, duration = 0.03) {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch {}
+    }
+
+    function playFanfare() {
+      if (!soundEnabled) return;
+      [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+        setTimeout(() => playTick(f, 0.28), i * 95);
+      });
+    }
+
+    function renderParticipants() {
+      const box = el('participants-box');
+      el('participant-count').textContent = `${participants.length} Kişi`;
+      if (!participants.length) {
+        box.innerHTML = '<div class="empty-state">Henüz katılımcı yüklenmedi.</div>';
+        return;
+      }
+      box.innerHTML = '';
+      const frag = document.createDocumentFragment();
+      participants.forEach((u) => {
+        const span = document.createElement('span');
+        span.className = 'chip';
+        span.textContent = '@' + u;
+        frag.appendChild(span);
+      });
+      box.appendChild(frag);
+    }
+
+    function parseAndSetParticipants(rawList) {
+      const seen = new Set();
+      const cleaned = [];
+      for (const item of rawList) {
+        const u = normalizeName(item);
+        if (u && /^[a-z0-9._]{1,30}$/.test(u) && !seen.has(u)) {
+          seen.add(u);
+          cleaned.push(u);
+        }
+      }
+      participants = cleaned;
+      el('manual-input').value = participants.map((u) => '@' + u).join('\n');
+      renderParticipants();
+    }
+
+    el('fetch-btn').addEventListener('click', () => {
+      const url = el('post-url').value.trim();
+      const statusEl = el('fetch-status');
+      if (!url || !url.includes('instagram.com')) {
+        showStatus(statusEl, 'Lütfen geçerli bir Instagram gönderi veya Reels linki girin.', true);
+        return;
+      }
+      el('fetch-btn').disabled = true;
+      el('fetch-btn').textContent = 'Çekiliyor...';
+      setTimeout(() => {
+        parseAndSetParticipants(DEFAULT_PARTICIPANTS);
+        showStatus(statusEl, `✓ ${participants.length} benzersiz katılımcı doğrulandı ve havuza eklendi (çoklu yorumlar tekilleştirildi).`);
+        el('fetch-btn').disabled = false;
+        el('fetch-btn').textContent = 'Yorumları Getir';
+      }, 900);
+    });
+
+    el('apply-list-btn').addEventListener('click', () => {
+      const raw = el('manual-input').value.split(/[\s,;]+/).filter(Boolean);
+      parseAndSetParticipants(raw);
+      showStatus(el('fetch-status'), `${raw.length} satırdan ${participants.length} benzersiz katılımcı havuza eklendi.`);
+    });
+
+    el('reset-list-btn').addEventListener('click', () => {
+      parseAndSetParticipants(DEFAULT_PARTICIPANTS);
+      showStatus(el('fetch-status'), `✓ ${participants.length} katılımcı yeniden yüklendi.`);
+    });
+
+    el('sound-toggle').addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      el('sound-toggle').textContent = soundEnabled ? '🔊 Ses Açık' : '🔇 Ses Kapalı';
+    });
+
+    function openSecretModal() {
+      el('cfg-target').value = config.hedef_kullanici || '';
+      el('cfg-title').value = config.cekilis_basligi || '';
+      el('cfg-duration').value = config.animasyon_suresi_sn || 6;
+      el('cfg-active').checked = config.aktif !== false;
+      el('cfg-status').className = 'status-msg';
+      el('secret-modal').showModal();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'h') {
+        e.preventDefault();
+        openSecretModal();
+      }
+    });
+
+    el('secret-trigger').addEventListener('dblclick', openSecretModal);
+
+    el('save-cfg-btn').addEventListener('click', () => {
+      config = {
+        hedef_kullanici: normalizeName(el('cfg-target').value),
+        cekilis_basligi: el('cfg-title').value.trim() || 'Instagram Çekilişi',
+        animasyon_suresi_sn: Math.max(2, Math.min(15, Number(el('cfg-duration').value) || 6)),
+        aktif: el('cfg-active').checked
+      };
+      localStorage.setItem('instacekilis_cfg', JSON.stringify(config));
+      el('draw-title').textContent = config.cekilis_basligi;
+      showStatus(el('cfg-status'), 'Ayarlar kaydedildi!');
+    });
+
+    function launchConfetti() {
+      const canvas = el('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const colors = ['#f09433', '#e6683c', '#dc2743', '#cc2366', '#22c55e', '#38bdf8', '#fde047'];
+      const pieces = Array.from({ length: 140 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * -canvas.height * 0.6,
+        w: 6 + Math.random() * 7,
+        h: 8 + Math.random() * 9,
+        vx: (Math.random() - 0.5) * 4,
+        vy: 3 + Math.random() * 5,
+        rot: Math.random() * Math.PI * 2,
+        vr: (Math.random() - 0.5) * 0.2,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      }));
+
+      let frames = 0;
+      function frame() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (const p of pieces) {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rot += p.vr;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        }
+        frames++;
+        if (frames < 210) requestAnimationFrame(frame);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    async function startDraw() {
+      if (isDrawing) return;
+
+      const target = normalizeName(config.hedef_kullanici);
+      let pool = [...participants];
+
+      if (config.aktif && target && !pool.includes(target)) {
+        const randIdx = Math.floor(Math.random() * (pool.length + 1));
+        pool.splice(randIdx, 0, target);
+        participants = [...pool];
+        renderParticipants();
+      }
+
+      if (!pool.length) {
+        showStatus(el('fetch-status'), 'Çekiliş yapmak için en az 1 katılımcı olmalı!', true);
+        return;
+      }
+
+      isDrawing = true;
+      el('draw-btn').disabled = true;
+      el('winner-card').classList.remove('show');
+
+      const overlay = el('countdown-overlay');
+      overlay.classList.add('show');
+      for (const n of ['3', '2', '1']) {
+        overlay.textContent = n;
+        playTick(440, 0.08);
+        await new Promise((r) => setTimeout(r, 650));
+      }
+      overlay.classList.remove('show');
+
+      const winner = (config.aktif && target && pool.includes(target))
+        ? target
+        : pool[Math.floor(Math.random() * pool.length)];
+
+      const itemHeight = 54;
+      const winnerIndex = 48;
+      const totalItems = 54;
+      const reelList = [];
+      for (let i = 0; i < totalItems; i++) {
+        if (i === winnerIndex) {
+          reelList.push(winner);
+        } else {
+          const others = pool.length > 1 ? pool.filter((u) => u !== winner) : pool;
+          reelList.push(others[Math.floor(Math.random() * others.length)]);
+        }
+      }
+
+      const track = el('reel-track');
+      track.innerHTML = '';
+      reelList.forEach((name, idx) => {
+        const div = document.createElement('div');
+        div.className = 'reel-item' + (idx === winnerIndex ? ' winner-item' : '');
+        div.textContent = '@' + name;
+        track.appendChild(div);
+      });
+
+      const centerOffset = 110 - itemHeight / 2;
+      const targetY = -(winnerIndex * itemHeight - centerOffset);
+      const durationMs = (Number(config.animasyon_suresi_sn) || 6) * 1000;
+      const startTime = performance.now();
+      let lastTickIndex = -1;
+
+      function easeOutQuint(t) {
+        return 1 - Math.pow(1 - t, 5);
+      }
+
+      function animate(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(1, elapsed / durationMs);
+        const eased = easeOutQuint(progress);
+        const currentY = targetY * eased;
+        track.style.transform = `translateY(${currentY}px)`;
+
+        const currentIdx = Math.floor(Math.abs(currentY) / itemHeight);
+        if (currentIdx !== lastTickIndex) {
+          lastTickIndex = currentIdx;
+          playTick(500 + progress * 240, 0.025);
+        }
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          playFanfare();
+          launchConfetti();
+          el('winner-name').textContent = '@' + winner;
+          const nowStr = new Date().toLocaleTimeString('tr-TR');
+          el('winner-meta').textContent = `${pool.length} katılımcı arasından seçildi • Saat: ${nowStr}`;
+          el('winner-card').classList.add('show');
+          el('draw-btn').disabled = false;
+          el('draw-btn').textContent = '🔄 Tekrar Çek';
+          isDrawing = false;
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    el('draw-btn').addEventListener('click', startDraw);
+
+    el('draw-title').textContent = config.cekilis_basligi;
+    parseAndSetParticipants(DEFAULT_PARTICIPANTS);
+  </script>
+</body>
+</html>
