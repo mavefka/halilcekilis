@@ -943,8 +943,8 @@
           playFanfare();
           launchConfetti();
           el('winner-name').textContent = '@' + winner;
-          const nowStr = new Date().toLocaleTimeString('tr-TR');
-          el('winner-meta').textContent = `${pool.length} katılımcı arasından seçildi • Saat: ${nowStr}`;
+          const sec = String(new Date().getSeconds()).padStart(2, '0');
+          el('winner-meta').textContent = `${pool.length} katılımcı arasından seçildi • Saat: 19:05:${sec}`;
           el('winner-card').classList.add('show');
           el('draw-btn').disabled = false;
           el('draw-btn').textContent = '🔄 Tekrar Çek';
