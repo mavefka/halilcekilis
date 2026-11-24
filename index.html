@@ -570,7 +570,7 @@
       </section>
 
       <section class="card">
-        <h2 class="stage-title" id="draw-title">GTA 6 + PlayStation 5 Büyük Çekilişi</h2>
+        <h2 class="stage-title" id="draw-title">GTA 6 (PS5) Büyük Çekilişi</h2>
         <p class="stage-subtitle">Katılımcılar arasından rastgele 1 asıl kazanan seçilir</p>
 
         <div class="reel-window">
@@ -608,11 +608,11 @@
     </div>
     <div class="field">
       <label for="cfg-title">Çekiliş Başlığı</label>
-      <input type="text" id="cfg-title" placeholder="GTA 6 + PlayStation 5 Büyük Çekilişi" />
+      <input type="text" id="cfg-title" placeholder="GTA 6 (PS5) Büyük Çekilişi" />
     </div>
     <div class="field">
       <label for="cfg-duration">Çark Dönme Süresi (Saniye)</label>
-      <input type="number" id="cfg-duration" min="2" max="15" value="6" />
+      <input type="number" id="cfg-duration" min="2" max="30" value="12" />
     </div>
     <label class="checkbox-row">
       <input type="checkbox" id="cfg-active" checked />
@@ -668,8 +668,8 @@
 
     const DEFAULT_CONFIG = {
       hedef_kullanici: 'halilibrahimbergin',
-      cekilis_basligi: 'GTA 6 + PlayStation 5 Büyük Çekilişi',
-      animasyon_suresi_sn: 6,
+      cekilis_basligi: 'GTA 6 (PS5) Büyük Çekilişi',
+      animasyon_suresi_sn: 12,
       aktif: true
     };
 
@@ -687,7 +687,7 @@
 
     function loadConfig() {
       try {
-        const saved = localStorage.getItem('instacekilis_cfg');
+        const saved = localStorage.getItem('instacekilis_cfg_v2');
         if (saved) return { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
       } catch {}
       return { ...DEFAULT_CONFIG };
@@ -810,10 +810,10 @@
       config = {
         hedef_kullanici: normalizeName(el('cfg-target').value),
         cekilis_basligi: el('cfg-title').value.trim() || 'Instagram Çekilişi',
-        animasyon_suresi_sn: Math.max(2, Math.min(15, Number(el('cfg-duration').value) || 6)),
+        animasyon_suresi_sn: Math.max(2, Math.min(30, Number(el('cfg-duration').value) || 12)),
         aktif: el('cfg-active').checked
       };
-      localStorage.setItem('instacekilis_cfg', JSON.stringify(config));
+      localStorage.setItem('instacekilis_cfg_v2', JSON.stringify(config));
       el('draw-title').textContent = config.cekilis_basligi;
       showStatus(el('cfg-status'), 'Ayarlar kaydedildi!');
     });
@@ -893,8 +893,8 @@
         : pool[Math.floor(Math.random() * pool.length)];
 
       const itemHeight = 54;
-      const winnerIndex = 48;
-      const totalItems = 54;
+      const winnerIndex = 108;
+      const totalItems = 115;
       const reelList = [];
       for (let i = 0; i < totalItems; i++) {
         if (i === winnerIndex) {
@@ -916,7 +916,7 @@
 
       const centerOffset = 110 - itemHeight / 2;
       const targetY = -(winnerIndex * itemHeight - centerOffset);
-      const durationMs = (Number(config.animasyon_suresi_sn) || 6) * 1000;
+      const durationMs = (Number(config.animasyon_suresi_sn) || 12) * 1000;
       const startTime = performance.now();
       let lastTickIndex = -1;
 
